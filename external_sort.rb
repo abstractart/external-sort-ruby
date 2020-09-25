@@ -32,18 +32,23 @@ module ExternalSort
 
     files << sort_and_save_batch(batch) unless batch.empty?
 
-    FileHelpers.merge_files(*files, filename)
+    sorted_file = generate_filename
+    FileHelpers.merge_files(*files, sorted_file)
 
     files.each {|f| FileUtils.rm_rf(f) }
 
-    nil
+    sorted_file
   end
 
   def sort_and_save_batch(batch)
     batch.sort!
-    filename = File.join(TMP, SecureRandom.hex + '.txt')
+    filename = generate_filename
     File.open(filename, "w") { |file| FileHelpers.write_to_file(file, batch) }
 
     filename
+  end
+
+  def generate_filename
+    File.join(TMP, SecureRandom.hex + '.txt')
   end
 end

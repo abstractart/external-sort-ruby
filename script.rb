@@ -1,9 +1,19 @@
 require_relative 'external_sort'
 
-filenames = ["files/1.txt", "files/2.txt", "files/3.txt"]
+def main
+  filenames = ["files/1.txt", "files/2.txt", "files/3.txt"]
 
-filenames.each do |filename|
-  ExternalSort.call(filename)
+  # Сортируем каждый файл, результат складываем в новый файл
+  sorted_filenames = filenames.map do |filename|
+    ExternalSort.call(filename)
+  end
+
+  # Сливаем отсортированные файлы в один
+  FileHelpers.merge_files(*sorted_filenames, 'files/solution.txt')
+
+  # Удаляем неактуальное
+  sorted_filenames.each {|f| FileUtils.rm_rf(f) }
 end
 
-FileHelpers.merge_files(*filenames, 'files/solution.txt')
+main
+
