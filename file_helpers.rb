@@ -3,14 +3,18 @@ module FileHelpers
 
   module_function
 
-  def read_next_int(file)
-    loop do
-      str = file.readline
+  def read_next_int_safe(file)
+    pos = file.pos
+    str = file.gets
 
-      return Integer(str) if  str != "\n"
-    end
+    file.seek(pos, IO::SEEK_SET)
+
+    Integer(str)
   end
 
+  def read_next_int(file)
+    Integer(file.gets)
+  end
 
   def write_to_file(file, arr)
     file.puts(arr.join("\n"))
@@ -19,36 +23,27 @@ module FileHelpers
   def merge_files(*filenames, path)
     files = filenames.map { |name| File.open(name, "r") }
     result = File.open(path, "w")
+
+    merge(*files, result)
+
+    files.each(&:close)
+    result.close
+  end
+
+  def merge(*files, result)
     batch = []
-    buffer = files.map do |file|
-      read_next_int(file)
-    rescue EOFError
-      Float::INFINITY # помечаем бесконечностью недоступные к чтению файлы
-    end
-
-    # Прекращаем работу если в буфферe все элементы бесконечность
-    while(!buffer.all? { |n| n == Float::INFINITY })
-      # Находим минимум и его индекс
+    while(!files.empty?)
+      buffer = files.map {|f| read_next_int_safe(f) }
       min = buffer.min
-
-      # пишем минимум в кэш
       batch << min
+      read_next_int(files[buffer.index(min)])
 
-      # если кэш наполнен, пишем в файл
       if batch.size == BATCH_SIZE
         write_to_file(result, batch)
         batch = []
       end
 
-      i = buffer.index(min)
-      # Если iй файл закончился то помечаем его буффер бесконечностью
-      if files[i].eof?
-        buffer[i] = Float::INFINITY
-        next
-      end
-
-      # Читаем следующее число из файла где нашли минимум
-      buffer[i] = read_next_int(files[i])
+      files.select! {|f| !f.eof?}
     end
 
     write_to_file(result, batch) if batch.size > 0

@@ -17,16 +17,12 @@ module ExternalSort
 
     File.open(filename, "r") do |file|
       while(!file.eof?)
-        begin
-          batch << FileHelpers.read_next_int(file)
-        rescue EOFError
-          break
-        end
+        batch << FileHelpers.read_next_int(file)
 
-        if batch.size == BATCH_SIZE
-          files << sort_and_save_batch(batch)
-          batch = []
-        end
+        next if batch.size < BATCH_SIZE
+
+        files << sort_and_save_batch(batch)
+        batch = []
       end
     end
 
