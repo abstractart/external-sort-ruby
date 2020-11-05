@@ -1,5 +1,4 @@
 require_relative 'external_sort'
-
 def main
   filenames = ["files/1.txt", "files/2.txt", "files/3.txt"]
 
