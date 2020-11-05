@@ -1,16 +1,9 @@
+require_relative 'buffer'
+
 module FileHelpers
   BATCH_SIZE = 5
 
   module_function
-
-  def read_next_int_safe(file)
-    pos = file.pos
-    str = file.gets
-
-    file.seek(pos, IO::SEEK_SET)
-
-    Integer(str)
-  end
 
   def read_next_int(file)
     Integer(file.gets)
@@ -32,24 +25,28 @@ module FileHelpers
 
   def merge(*files, result)
     batch = []
-    while(!files.empty?)
-      buffer = files.map {|f| read_next_int_safe(f) }
-      min = buffer.min
+    buffers = files.map { |f| Buffer.new(f) }
+
+    buffers.select!{|b| !b.empty?}
+    while(!buffers.empty?)
+      values = buffers.map(&:get)
+      min = values.min
+
       batch << min
-      read_next_int(files[buffer.index(min)])
+      buffers[values.index(min)].pop
 
       if batch.size == BATCH_SIZE
         write_to_file(result, batch)
         batch = []
       end
 
-      files.select! {|f| !f.eof?}
+      buffers.select!{|b| !b.empty?}
     end
 
-    write_to_file(result, batch) if batch.size > 0
-
-    files.each(&:close)
-    result.close
+    if batch.size > 0
+      write_to_file(result, batch)
+      batch = []
+    end
   end
 end
 
