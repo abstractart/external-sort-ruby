@@ -1,7 +1,9 @@
 require 'securerandom'
 require 'fileutils'
 
-require_relative './file_helpers'
+require_relative './merger'
+require_relative './buffer'
+require_relative './writer'
 
 module ExternalSort
   TMP = "/tmp/"
@@ -16,30 +18,33 @@ module ExternalSort
     files = []
 
     File.open(filename, "r") do |file|
-      while(!file.eof?)
-        batch << FileHelpers.read_next_int(file)
+      buffer = Buffer.new(file)
 
-        next if batch.size < BATCH_SIZE
-
-        files << sort_and_save_batch(batch)
-        batch = []
+      while(!buffer.empty?)
+        batch << buffer.pop
+        if batch.size == BATCH_SIZE
+          files << sort_and_save_batch(batch)
+          batch = []
+        end
       end
     end
 
-    files << sort_and_save_batch(batch) unless batch.empty?
+    unless batch.empty?
+      files << sort_and_save_batch(batch)
+      batch = []
+    end
 
-    sorted_file = generate_filename
-    FileHelpers.merge_files(*files, sorted_file)
-
+    result_filename = generate_filename
+    Merger.call(files, result_filename)
     files.each {|f| FileUtils.rm_rf(f) }
 
-    sorted_file
+    result_filename
   end
 
   def sort_and_save_batch(batch)
     batch.sort!
     filename = generate_filename
-    File.open(filename, "w") { |file| FileHelpers.write_to_file(file, batch) }
+    File.open(filename, "w") { |file| Writer.call(file, batch) }
 
     filename
   end

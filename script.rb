@@ -1,4 +1,5 @@
 require_relative 'external_sort'
+
 def main
   filenames = ["files/1.txt", "files/2.txt", "files/3.txt"]
 
@@ -8,7 +9,7 @@ def main
   end
 
   # Сливаем отсортированные файлы в один
-  FileHelpers.merge_files(*sorted_filenames, 'files/solution.txt')
+  Merger.call(sorted_filenames, 'files/solution.txt')
 
   # Удаляем неактуальное
   sorted_filenames.each {|f| FileUtils.rm_rf(f) }

@@ -1,5 +1,4 @@
 require_relative 'deque'
-require_relative 'file_helpers'
 
 class Buffer
   def initialize(io, size = 5)
@@ -8,12 +7,12 @@ class Buffer
 
     size.times do
       break if @io.eof?
-      @deque.push_back(FileHelpers.read_next_int(@io))
+      @deque.push_back(Integer(@io.gets))
     end
   end
 
   def pop
-    deque.push_back(FileHelpers.read_next_int(io)) unless io.eof?
+    deque.push_back(Integer(io.gets)) unless io.eof?
     deque.pop_front
   end
 
