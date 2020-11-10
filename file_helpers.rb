@@ -28,9 +28,7 @@ module FileHelpers
     buffers = files.map { |f| Buffer.new(f) }
 
     while(!buffers.all?(&:empty?))
-      minimium_buffer = find_buffer_with_min(buffers)
-      batch << minimium_buffer.get
-      minimium_buffer.pop
+      batch << find_minimum(buffers)
 
       if batch.size == BATCH_SIZE
         write_to_file(result, batch)
@@ -44,16 +42,26 @@ module FileHelpers
     end
   end
 
-  def find_buffer_with_min(buffers)
-    min = nil
+  def find_minimum(buffers)
+    min_value, min_buffer = nil, nil
     buffers.each do |buffer|
       next if buffer.empty?
 
-      min = buffer unless min
-      min = buffer if min.get > buffer.get
+      if min_value.nil?
+        min_value, min_buffer = buffer.pop, buffer
+        next
+      end
+
+      val = buffer.pop
+      if val < min_value
+        min_buffer.push(min_value)
+        min_value, min_buffer = val, buffer
+      else
+        buffer.push(val)
+      end
     end
 
-    min
+    min_value
   end
 end
 
